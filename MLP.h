@@ -23,7 +23,7 @@ class MLP : public ClusterizationMethods
         * \param  bool validationMEthod - kfold or corss validation.
         */
         
-		void determineKfoldValidation(double qtty);
+		
         /*! \fn virtual ~MLP();
         * \brief A destructor.
         */
