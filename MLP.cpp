@@ -7,8 +7,8 @@ MLP::MLP()
 MLP::MLP(int h1pNo, int h2pNo, double qtty, int maxIter, bool validationMethod)
 {
     //no of neurons in hidden layer
-    h1No = h1pNo;
-    h2No = h2pNo;
+    HiddenNeuronNo1 = h1pNo;
+    HiddenNeuronNo2 = h2pNo;
  //   param = qtty;
    // this->dL = dL; //learning
    // this->dT = dT; //testing
@@ -22,13 +22,13 @@ MLP::MLP(int h1pNo, int h2pNo, double qtty, int maxIter, bool validationMethod)
     mlpsetdecay(trn, 0.001); // by default we set moderate weight decay
     mlpsetcond(trn, wstep, this->maxIter);     // * we choose iterations limit as stopping condition (another condition - step size - is zero, which means than this condition is not active)
 
-    if ((h1No > 0) && (h2No > 0))
-        alglib::mlpcreatec2(X.getObjectAt(0).getFeatureCount(), h1No, h2No, X.getClassCount(), network); //create nn network with noofinput features, 2 hidden layers, noofclasses (and sore to network variable)
-    if ((h1No > 0) && (h2No == 0))
-         alglib::mlpcreatec1(X.getObjectAt(0).getFeatureCount(), h1No, X.getClassCount(), network); //create nn network with no of input features, 1 hidden layer, noofclasses (and sore to network variable)
-    if ((h1No == 0) && (h2No == 0))
+    if ((HiddenNeuronNo1 > 0) && (HiddenNeuronNo2 > 0))
+        alglib::mlpcreatec2(X.getObjectAt(0).getFeatureCount(), HiddenNeuronNo1, HiddenNeuronNo2, X.getClassCount(), network); //create nn network with noofinput features, 2 hidden layers, noofclasses (and sore to network variable)
+    if ((HiddenNeuronNo1 > 0) && (HiddenNeuronNo2 == 0))
+         alglib::mlpcreatec1(X.getObjectAt(0).getFeatureCount(), HiddenNeuronNo1, X.getClassCount(), network); //create nn network with no of input features, 1 hidden layer, noofclasses (and sore to network variable)
+    if ((HiddenNeuronNo1 == 0) && (HiddenNeuronNo2 == 0))
         alglib::mlpcreatec0(X.getObjectAt(0).getFeatureCount(), X.getClassCount(), network); //create nn network with no of input features, 0 hidden layer, noofclasses (and sore to network variable)
-///h2No must be non zero
+///HiddenNeuronNo2 must be non zero
 
 	
 	inline void MLP::determineKfoldValidation(double qtty)
@@ -67,53 +67,53 @@ MLP::~MLP()
 ObjectMatrix MLP::getProjection()
 {
     //int cols = X.getClassCount();
-    int ftCount = X.getObjectAt(0).getFeatureCount();
+    int featureCount = X.getObjectAt(0).getFeatureCount();
     int objCount = X.getObjectCount();
 
-    initializeYMatrix(objCount, ftCount + X.getClassCount());
+    initializeYMatrix(objCount, featureCount + X.getClassCount());
 
     alglib::real_1d_array tmpYObj;
     alglib::real_1d_array tmpXObj;
 
-    tmpYObj.setlength(ftCount);
+    tmpYObj.setlength(featureCount);
     tmpXObj.setlength(X.getClassCount());
 
-    DataObject tmpO;
-    for (int i = 0; i < objCount; i++)
+    DataObject tempObj;
+    for (int objIndex = 0; objIndex < objCount; objIndex++)
     {
 
 		
-		inline void MLP::updateDataObjectsWithFeatures(DataObject &tmpO, int i, int ftCount, alglib::real_1d_array &tmpYObj)
+		inline void MLP::updateDataObjectsWithFeatures(DataObject &tempObj, int objIndex, int featureCount, alglib::real_1d_array &tmpYObj)
 		{
-			tmpO = X.getObjectAt(i);
-			for (int ft = 0; ft < ftCount; ft++)
+			tempObj = X.getObjectAt(objIndex);
+			for (int ft = 0; ft < featureCount; ft++)
 			{
-				double feature = tmpO.getFeatureAt(ft);
+				double feature = tempObj.getFeatureAt(ft);
 				tmpYObj(ft) = feature;
-				Y.updateDataObject(i, ft, feature);
+				Y.updateDataObject(objIndex, ft, feature);
 			}
 		}
 
         alglib::mlpprocess(network, tmpYObj, tmpXObj);
 
-		inline void UpdateDataObjectsWithMaxProbability(alglib::real_1d_array &tmpXObj, int i, int ftCount, DataObject &tmpO) {
-			double max_prob = tmpXObj(0);
+		inline void UpdateDataObjectsWithMaxProbability(alglib::real_1d_array &tmpXObj, int objIndex, int featureCount, DataObject &tempObj) {
+			double max_probability = tmpXObj(0);
 			int indx = 0;
 
 			for (int j = 0; j < X.getClassCount(); j++)
 			{
-				Y.updateDataObject(i, j + ftCount, tmpXObj(j));
-				if (max_prob < tmpXObj(j))
+				Y.updateDataObject(objIndex, j + featureCount, tmpXObj(j));
+				if (max_probability < tmpXObj(j))
 				{
-					max_prob = tmpXObj(j);
+					max_probability = tmpXObj(j);
 					indx = j;
 				}
 			}
 
-			if (tmpO.getClassLabel() != -1)
-				Y.updateDataObjectClass(i, tmpO.getClassLabel());
+			if (tempObj.getClassLabel() != -1)
+				Y.updateDataObjectClass(objIndex, tempObj.getClassLabel());
 			else
-				Y.updateDataObjectClass(i, indx);
+				Y.updateDataObjectClass(objIndex, indx);
 		}
         
     }

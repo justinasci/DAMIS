@@ -43,8 +43,8 @@ class MLP : public ClusterizationMethods
 
     private:
 		void determineKfoldValidation(double qtty);
-		void updateDataObjectsWithFeatures(DataObject &tmpO, int i, int ftCount, alglib::real_1d_array &tmpYObj);
-		void UpdateDataObjectsWithMaxProbability(alglib::real_1d_array &tmpXObj, int i, int ftCount, DataObject &tmpO);
+		void updateDataObjectsWithFeatures(DataObject &tmpO, int objIndex, int ftCount, alglib::real_1d_array &tmpYObj);
+		void UpdateDataObjectsWithMaxProbability(alglib::real_1d_array &tmpXObj, int objIndex, int ftCount, DataObject &tmpO);
         /*! \var int h1No;
          *  \brief Number of neurons in first hidden layer
          */
