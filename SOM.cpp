@@ -80,6 +80,43 @@ void SOM::InitializeRandom(int n, ObjectMatrix * M, DataObject &objMtmp)
 	}
 }
 
+void SOM::GetWinner(double &dist_ij, ObjectMatrix * M, DataObject &objXtmp, double &win_dist, int &win_x, int &win_y)
+{
+	for (int i = 0; i < k_x; i++)
+	{
+		for (int j = 0; j < k_y; j++)
+		{
+			dist_ij = DistanceMetrics::getDistance(M->getObjectAt(i, j), objXtmp, EUCLIDEAN);
+			if (dist_ij < win_dist)
+			{
+				win_dist = dist_ij;
+				win_x = i;
+				win_y = j;
+			}
+		}
+	}
+}
+
+void SOM::UpdateVector(DataObject &objMtmp, ObjectMatrix * M, int n, double &eta, int win_x, int win_y, double &h, double alpha, double &tmp, DataObject &objXtmp)
+{
+	for (int i = 0; i < k_x; i++)
+	{
+		for (int j = 0; j < k_y; j++)
+		{
+			objMtmp = M->getObjectAt(i, j);
+			for (int k = 0; k < n; k++) // k=1
+			{
+				eta = Max(abs(win_x - i), abs(win_y - j));
+				h = (float)alpha / (alpha * eta + 1.);
+				if (eta > Max(alpha * Max((double)k_x, (double)k_y), 1.0))
+					h = 0.0;
+				tmp = objMtmp.getFeatureAt(k) + h * (objXtmp.getFeatureAt(k) - objMtmp.getFeatureAt(k));
+				M->updateDataObject(i, j, k, tmp);
+			}
+		}
+	}
+}
+
 ObjectMatrix SOM::getProjection()
 {
     int n = X.getObjectAt(0).getFeatureCount();
@@ -105,36 +142,8 @@ ObjectMatrix SOM::getProjection()
             win_y = 0;
             objXtmp = X.getObjectAt(l);
 
-            for (int i = 0; i < k_x; i++)
-            {
-                for (int j = 0; j < k_y; j++)
-                {
-                    dist_ij = DistanceMetrics::getDistance(M->getObjectAt(i, j), objXtmp, EUCLIDEAN);
-                    if (dist_ij < win_dist)
-                    {
-                        win_dist = dist_ij;
-                        win_x = i;
-                        win_y = j;
-                    }
-                }
-            }
-            for (int i = 0; i < k_x ; i++)
-            {
-                for (int j = 0 ; j < k_y ; j++)
-                {
-                    objMtmp = M->getObjectAt(i, j);
-                    for (int k = 0; k < n; k++) // k=1
-                    {
-                        eta = Max(abs(win_x - i), abs(win_y - j));
-                        h = (float)alpha / (alpha * eta + 1.);
-                        if (eta > Max(alpha * Max((double)k_x, (double)k_y), 1.0))
-                            h = 0.0;
-                        tmp = objMtmp.getFeatureAt(k) + h * (objXtmp.getFeatureAt(k) - objMtmp.getFeatureAt(k));
-                        M->updateDataObject(i, j, k, tmp);
-                    }
-                }
-
-            }
+			GetWinner(dist_ij, M, objXtmp, win_dist, win_x, win_y);
+			UpdateVector(objMtmp, M, n, eta, win_x, win_y, h, alpha, tmp, objXtmp);
         }
     }
 
@@ -148,20 +157,7 @@ ObjectMatrix SOM::getProjection()
         win_x = 0;
         win_y = 0;
         objXtmp = X.getObjectAt(l);
-        for (int i = 0; i < k_x; i++)
-        {
-            for (int j = 0; j < k_y; j++)
-            {
-                dist_ij = DistanceMetrics::getDistance(M->getObjectAt(i, j), objXtmp, EUCLIDEAN);
-
-                if (dist_ij < win_dist)
-                {
-                    win_dist = dist_ij;
-                    win_x = i;
-                    win_y = j;
-                }
-            }
-        }
+		GetWinner(dist_ij, M, objXtmp, win_dist, win_x, win_y);
         // std::string cls = std::to_string(win_x) + "-" + std::to_string(win_y);
 
         if (returnWinners == false)

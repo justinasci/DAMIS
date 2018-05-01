@@ -104,6 +104,8 @@ private:
     bool returnWinners;
 
 	void InitializeRandom(int n, ObjectMatrix * M, DataObject &objMtmp);
+	void GetWinner(double &dist_ij, ObjectMatrix * M, DataObject &objXtmp, double &win_dist, int &win_x, int &win_y);
+	void UpdateVector(DataObject &objMtmp, ObjectMatrix * M, int n, double &eta, int win_x, int win_y, double &h, double alpha, double &tmp, DataObject &objXtmp)
 
 };
 #endif // !defined(SOM_H)
