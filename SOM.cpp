@@ -117,81 +117,92 @@ void SOM::UpdateVector(DataObject &objMtmp, ObjectMatrix * M, int n, double &eta
 	}
 }
 
-ObjectMatrix SOM::getProjection()
+void SOM::GetFinalWInner(std::vector<std::string> &diffObjClaseses, std::vector<std::string> &objClass, int m, ObjectMatrix &M_w)
 {
-    int n = X.getObjectAt(0).getFeatureCount();
-    int m = X.getObjectCount();
-    ObjectMatrix *M  = new ObjectMatrix(k_x, k_y, n);
-    ObjectMatrix M_w(m);
-    std::vector<double> M_Matrix_Row;
-    double alpha , win_dist, dist_ij, eta, h, tmp;
-    int win_x, win_y;
-    std::vector<std::string> possClasses;
+	if (returnWinners == false)
+	{
+		diffObjClaseses = objClass;
+		//remove dublicates
+		std::sort(diffObjClaseses.begin(), diffObjClaseses.end());
+		auto last = std::unique(diffObjClaseses.begin(), diffObjClaseses.end());
+		diffObjClaseses.erase(last, diffObjClaseses.end());
+		nWinner.setPrintClass(diffObjClaseses);
 
-    DataObject objXtmp, objMtmp;
-	InitializeRandom(n, M, objMtmp);
 
-    for (int e = 0; e < eHat; e++)
-    {
-        alpha =  Max((double)(eHat + 1.0 - e) / (float) eHat, 0.01);
+		for (int i = 0; i < m; i++) //setting object classes
+		{
+			for (int j = 0; j < diffObjClaseses.size(); j++)
+			{
+				if (objClass.at(i) == diffObjClaseses.at(j))
+				{
+					nWinner.updateDataObjectClass(i, j);
+					break;
+				}
+			}
+		}
+	}
+	else
+		nWinner = Different(M_w);
+}
 
-        for (int l = 0; l < m; l++)
-        {
-            win_dist = DBL_MAX;
-            win_x = 0;
-            win_y = 0;
-            objXtmp = X.getObjectAt(l);
+void SOM::Normalize(double &alpha, int m, double &win_dist, int &win_x, int &win_y, DataObject &objXtmp, double &dist_ij, ObjectMatrix * M, DataObject &objMtmp, int n, double &eta, double &h, double &tmp)
+{
+	for (int e = 0; e < eHat; e++)
+	{
+		alpha = Max((double)(eHat + 1.0 - e) / (float)eHat, 0.01);
+
+		for (int l = 0; l < m; l++)
+		{
+			win_dist = DBL_MAX;
+			win_x = 0;
+			win_y = 0;
+			objXtmp = X.getObjectAt(l);
 
 			GetWinner(dist_ij, M, objXtmp, win_dist, win_x, win_y);
 			UpdateVector(objMtmp, M, n, eta, win_x, win_y, h, alpha, tmp, objXtmp);
-        }
-    }
+		}
+	}
+}
 
-    if (returnWinners == false)
-        nWinner = X;
-
-    std::vector<std::string> objClass;
-    for (int l = 0; l < m; l++)
-    {
-        win_dist = DBL_MAX;
-        win_x = 0;
-        win_y = 0;
-        objXtmp = X.getObjectAt(l);
+void SOM::Finalize(int m, double &win_dist, int &win_x, int &win_y, DataObject &objXtmp, double &dist_ij, ObjectMatrix * M, std::vector<std::string> &objClass, ObjectMatrix &M_w)
+{
+	for (int l = 0; l < m; l++)
+	{
+		win_dist = DBL_MAX;
+		win_x = 0;
+		win_y = 0;
+		objXtmp = X.getObjectAt(l);
 		GetWinner(dist_ij, M, objXtmp, win_dist, win_x, win_y);
-        // std::string cls = std::to_string(win_x) + "-" + std::to_string(win_y);
+		if (returnWinners == false)
+			objClass.push_back(std::to_string(static_cast<long long>(win_x)) + "-" + std::to_string(static_cast<long long>(win_y)));
+		else
+			M_w.addObject(M->getObjectAt(win_x, win_y));
+	}
+}
 
-        if (returnWinners == false)
-            objClass.push_back(std::to_string(static_cast<long long>(win_x)) + "-" + std::to_string(static_cast<long long>(win_y)));
-        else
-            M_w.addObject(M->getObjectAt(win_x, win_y));
-    }
-    std::vector<std::string> diffObjClaseses;
-    if (returnWinners == false)
-    {
-        diffObjClaseses = objClass;
-        //remove dublicates
-        std::sort(diffObjClaseses.begin(), diffObjClaseses.end());
-        auto last = std::unique(diffObjClaseses.begin(), diffObjClaseses.end());
-        diffObjClaseses.erase(last, diffObjClaseses.end());
-        nWinner.setPrintClass(diffObjClaseses);
+ObjectMatrix SOM::getProjection()
+{
+	int n = X.getObjectAt(0).getFeatureCount();
+	int m = X.getObjectCount();
+	ObjectMatrix *M = new ObjectMatrix(k_x, k_y, n);
+	ObjectMatrix M_w(m);
+	std::vector<double> M_Matrix_Row;
+	double alpha, win_dist, dist_ij, eta, h, tmp;
+	int win_x, win_y;
+	std::vector<std::string> possClasses;
 
+	DataObject objXtmp, objMtmp;
+	InitializeRandom(n, M, objMtmp);
+	Normalize(alpha, m, win_dist, win_x, win_y, objXtmp, dist_ij, M, objMtmp, n, eta, h, tmp);
 
-        for (int i = 0; i < m; i++) //setting object classes
-        {
-            for (int j = 0; j < diffObjClaseses.size(); j++)
-            {
-                if (objClass.at(i) == diffObjClaseses.at(j) )
-                {
-                    nWinner.updateDataObjectClass(i, j);
-                    break;
-                }
-            }
-        }
-    }
-    else
-        nWinner = Different(M_w);
+	if (returnWinners == false)
+		nWinner = X;
 
-    return  nWinner;
+	std::vector<std::string> objClass;
+	Finalize(m, win_dist, win_x, win_y, objXtmp, dist_ij, M, objClass, M_w);
+	std::vector<std::string> diffObjClaseses;
+	GetFinalWInner(diffObjClaseses, objClass, m, M_w);
+	return  nWinner;
 }
 
 double SOM::Max(double d1, double d2)

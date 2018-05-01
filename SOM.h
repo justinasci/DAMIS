@@ -105,7 +105,10 @@ private:
 
 	void InitializeRandom(int n, ObjectMatrix * M, DataObject &objMtmp);
 	void GetWinner(double &dist_ij, ObjectMatrix * M, DataObject &objXtmp, double &win_dist, int &win_x, int &win_y);
-	void UpdateVector(DataObject &objMtmp, ObjectMatrix * M, int n, double &eta, int win_x, int win_y, double &h, double alpha, double &tmp, DataObject &objXtmp)
+	void UpdateVector(DataObject &objMtmp, ObjectMatrix * M, int n, double &eta, int win_x, int win_y, double &h, double alpha, double &tmp, DataObject &objXtmp);
+	void SOM::GetFinalWInner(std::vector<std::string> &diffObjClaseses, std::vector<std::string> &objClass, int m, ObjectMatrix &M_w);
+	void SOM::Normalize(double &alpha, int m, double &win_dist, int &win_x, int &win_y, DataObject &objXtmp, double &dist_ij, ObjectMatrix * M, DataObject &objMtmp, int n, double &eta, double &h, double &tmp);
+	void SOM::Finalize(int m, double &win_dist, int &win_x, int &win_y, DataObject &objXtmp, double &dist_ij, ObjectMatrix * M, std::vector<std::string> &objClass, ObjectMatrix &M_w);
 
 };
 #endif // !defined(SOM_H)
