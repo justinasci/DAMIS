@@ -28,14 +28,7 @@ ObjectMatrix KMEANS::getProjection()
     int rowsX = X.getObjectCount(), colsX = X.getObjectAt(0).getFeatureCount();
     input.setlength(rowsX, colsX);
 
-    for ( int i = 0; i < rowsX; i++ ) // convert X matrix to alglib 2d array of reals
-    {
-        DataObject tmp = X.getObjectAt(i);
-        for ( int j = 0; j < colsX; j++ )
-        {
-            input(i,j) = tmp.getFeatureAt(j);
-        }
-    }
+    convertMatrixToArray(rowsX, input);
 
     alglib::clusterizercreate(s);
     alglib::clusterizersetpoints(s, input, 2); //2 means Euclidean distances
@@ -43,7 +36,9 @@ ObjectMatrix KMEANS::getProjection()
     alglib::clusterizerrunkmeans(s, ClusterizationMethods::getNoOfClusters(), rep);
 
     Y = X;
-    std::vector <std::string> classes; classes.reserve(0);
+    std::vector <std::string> classes; 
+    classes.reserve(0);
+
     for (int i = 0; i < ClusterizationMethods::getNoOfClusters(); i++)
         classes.push_back(std::to_string(static_cast<long long>(i)));
     Y.setPrintClass(classes);
@@ -56,7 +51,22 @@ ObjectMatrix KMEANS::getProjection()
      return Y;
 }
 
-double KMEANS::getStress()
+
+
+alglib::real_2d_array KMEANS::convertMatrixToArray(int rowsX, alglib::real_2d_array input)
+{
+
+    for ( int i = 0; i < rowsX; i++ ) // convert X matrix to alglib 2d array of reals
+    {
+        DataObject tmp = X.getObjectAt(i);
+        for ( int j = 0; j < colsX; j++ )
+        {
+            input(i,j) = tmp.getFeatureAt(j);
+        }
+    }
+}
+
+double KMEANS::getStress(int rowsX)
 {
     return 0.0;
 }
