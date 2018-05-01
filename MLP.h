@@ -22,7 +22,8 @@ class MLP : public ClusterizationMethods
         * \param in maxIter - number of mafimum iteration
         * \param  bool validationMEthod - kfold or corss validation.
         */
-        MLP(int h1pNo, int h2pNo, double qtty, int maxIter, bool validationMethod);
+        
+		void determineKfoldValidation(double qtty);
         /*! \fn virtual ~MLP();
         * \brief A destructor.
         */
@@ -33,6 +34,7 @@ class MLP : public ClusterizationMethods
          *  \return ObjectMatrix Y - the projection matrix.
          */
         virtual ObjectMatrix getProjection();
+		
         /*! \fn double getStress();
          *  \brief Returns the projection matrix \a Y of matrix \a X.
          *  \return double  - average relative error.
@@ -40,7 +42,9 @@ class MLP : public ClusterizationMethods
         double getStress();
 
     private:
-
+		void determineKfoldValidation(double qtty);
+		void updateDataObjectsWithFeatures(DataObject &tmpO, int i, int ftCount, alglib::real_1d_array &tmpYObj);
+		void UpdateDataObjectsWithMaxProbability(alglib::real_1d_array &tmpXObj, int i, int ftCount, DataObject &tmpO);
         /*! \var int h1No;
          *  \brief Number of neurons in first hidden layer
          */

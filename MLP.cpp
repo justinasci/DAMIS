@@ -30,28 +30,34 @@ MLP::MLP(int h1pNo, int h2pNo, double qtty, int maxIter, bool validationMethod)
         alglib::mlpcreatec0(X.getObjectAt(0).getFeatureCount(), X.getClassCount(), network); //create nn network with no of input features, 0 hidden layer, noofclasses (and sore to network variable)
 ///h2No must be non zero
 
-    if (this->kFoldValidation == true) //do kfold validation
-    {
-        ClusterizationMethods::initializeData();
+	
+	inline void MLP::determineKfoldValidation(double qtty)
+	{
+		if (this->kFoldValidation == true) //do kfold validation
+		{
+			ClusterizationMethods::initializeData();
 
-        alglib::mlpsetdataset(trn, ClusterizationMethods::learnSet, ClusterizationMethods::learnObjQtty); //attach learning data to data set
+			alglib::mlpsetdataset(trn, ClusterizationMethods::learnSet, ClusterizationMethods::learnObjQtty); //attach learning data to data set
 
-        alglib::mlpkfoldcv(trn, network, 1, int(qtty), rep);
-    }
-    else
-    {
-        ClusterizationMethods::initializeData(qtty, 100 - qtty);
+			alglib::mlpkfoldcv(trn, network, 1, int(qtty), rep);
+		}
+		else
+		{
+			ClusterizationMethods::initializeData(qtty, 100 - qtty);
 
-        alglib::mlpsetdataset(trn, ClusterizationMethods::learnSet, ClusterizationMethods::learnObjQtty); //attach learning data to data set
+			alglib::mlpsetdataset(trn, ClusterizationMethods::learnSet, ClusterizationMethods::learnObjQtty); //attach learning data to data set
 
-        alglib::mlptrainnetwork(trn, network, 1, rep); // train network NRestarts=1, network is trained from random initial state. With NRestarts=0, network is trained without randomization (original state is used as initial point).
-        alglib::integer_1d_array Subset;
-        Subset.setlength(10);
-        alglib::mlpallerrorssubset(network, testSet, testObjQtty, Subset, -1, repp);
-    }
+			alglib::mlptrainnetwork(trn, network, 1, rep); // train network NRestarts=1, network is trained from random initial state. With NRestarts=0, network is trained without randomization (original state is used as initial point).
+			alglib::integer_1d_array Subset;
+			Subset.setlength(10);
+			alglib::mlpallerrorssubset(network, testSet, testObjQtty, Subset, -1, repp);
+		}
+	}
     //ctor
     // now get network error // do not calculate cross-validation since it validates the topology of the network
 }
+
+
 
 MLP::~MLP()
 {
@@ -75,33 +81,41 @@ ObjectMatrix MLP::getProjection()
     DataObject tmpO;
     for (int i = 0; i < objCount; i++)
     {
-        tmpO = X.getObjectAt(i);
-        for (int ft = 0; ft < ftCount; ft++)
-        {
-            double feature = tmpO.getFeatureAt(ft);
-            tmpYObj(ft) = feature;
-            Y.updateDataObject(i, ft, feature);
-        }
+
+		
+		inline void MLP::updateDataObjectsWithFeatures(DataObject &tmpO, int i, int ftCount, alglib::real_1d_array &tmpYObj)
+		{
+			tmpO = X.getObjectAt(i);
+			for (int ft = 0; ft < ftCount; ft++)
+			{
+				double feature = tmpO.getFeatureAt(ft);
+				tmpYObj(ft) = feature;
+				Y.updateDataObject(i, ft, feature);
+			}
+		}
 
         alglib::mlpprocess(network, tmpYObj, tmpXObj);
 
-        double max_prob = tmpXObj(0);
-        int indx = 0;
+		inline void UpdateDataObjectsWithMaxProbability(alglib::real_1d_array &tmpXObj, int i, int ftCount, DataObject &tmpO) {
+			double max_prob = tmpXObj(0);
+			int indx = 0;
 
-        for (int j = 0; j < X.getClassCount(); j++)
-        {
-            Y.updateDataObject(i, j + ftCount, tmpXObj(j));
-            if (max_prob < tmpXObj(j))
-            {
-                max_prob = tmpXObj(j);
-                indx = j;
-            }
-        }
+			for (int j = 0; j < X.getClassCount(); j++)
+			{
+				Y.updateDataObject(i, j + ftCount, tmpXObj(j));
+				if (max_prob < tmpXObj(j))
+				{
+					max_prob = tmpXObj(j);
+					indx = j;
+				}
+			}
 
-        if (tmpO.getClassLabel() != -1)
-            Y.updateDataObjectClass(i, tmpO.getClassLabel());
-        else
-            Y.updateDataObjectClass(i, indx);
+			if (tmpO.getClassLabel() != -1)
+				Y.updateDataObjectClass(i, tmpO.getClassLabel());
+			else
+				Y.updateDataObjectClass(i, indx);
+		}
+        
     }
 
         std::vector <std::string > probabilities; probabilities.reserve(0);
@@ -115,6 +129,8 @@ ObjectMatrix MLP::getProjection()
 
     return Y;
 }
+
+
 
 double MLP::getStress()
 {
