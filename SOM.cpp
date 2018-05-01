@@ -46,7 +46,6 @@ SOM::SOM(int rows, int columns, int ehat, bool retWinners)
     X.loadDataMatrix();
     returnWinners = retWinners;
 }
-
 SOM::SOM(int rows, int columns, int ehat, ObjectMatrix x)
 {
     k_x = rows;
@@ -54,6 +53,31 @@ SOM::SOM(int rows, int columns, int ehat, ObjectMatrix x)
     eHat = ehat;
     X = x;
     returnWinners = true;
+}
+
+void SOM::InitializeRandom(int n, ObjectMatrix * M, DataObject &objMtmp)
+{
+	for (int i = 0; i < k_x; i++)
+	{
+		for (int j = 0; j < k_y; j++)
+		{
+			double dist = 0.0;
+			double rnd;
+
+			for (int k = 0; k < n; k++)
+			{
+				rnd = Statistics::getRandom(-1.0, 1.0);
+				M->updateDataObject(i, j, k, rnd);
+				dist += rnd*rnd;
+			}
+
+			double rootDist = sqrt(dist);
+			objMtmp = M->getObjectAt(i, j);
+
+			for (int k = 0; k < n; k++) //norm data in M matrix
+				M->updateDataObject(i, j, k, float(objMtmp.getFeatureAt(k) / rootDist));
+		}
+	}
 }
 
 ObjectMatrix SOM::getProjection()
@@ -67,30 +91,8 @@ ObjectMatrix SOM::getProjection()
     int win_x, win_y;
     std::vector<std::string> possClasses;
 
-
     DataObject objXtmp, objMtmp;
-
-    for (int i = 0; i < k_x; i++)
-    {
-        for (int j = 0; j < k_y; j++)
-        {
-            double dist = 0.0;
-            double rnd;
-
-            for (int k = 0; k < n; k++)
-            {
-                rnd = Statistics::getRandom(-1.0, 1.0);
-                M->updateDataObject(i, j, k, rnd);
-                dist += rnd*rnd;
-            }
-
-            double rootDist = sqrt(dist);
-            objMtmp = M->getObjectAt(i, j);
-
-            for (int k = 0; k < n; k++) //norm data in M matrix
-                M->updateDataObject(i, j, k, float(objMtmp.getFeatureAt(k) / rootDist));
-        }
-    }
+	InitializeRandom(n, M, objMtmp);
 
     for (int e = 0; e < eHat; e++)
     {
