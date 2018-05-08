@@ -14,7 +14,7 @@ ClusterizationMethods::ClusterizationMethods()
 {
         testObjQtty = 0;
         learnObjQtty = 0;
-        uknownClassObjQtty = 0;    
+        unknownClassObjQtty = 0;    
 initializeXMatrix();
     noOfClusters = X.getClassCount();
     objectIndex.reserve(0);
@@ -26,7 +26,7 @@ ClusterizationMethods::ClusterizationMethods(int clNo)
 {
         testObjQtty = 0;
         learnObjQtty = 0;
-        uknownClassObjQtty = 0;
+        unknownClassObjQtty = 0;
     noOfClusters = clNo;
     initializeXMatrix();
 }
@@ -121,17 +121,25 @@ void ClusterizationMethods::setYMatrixDimensions(int rows, int cols)
     ClusterizationMethods::setNoOfReturnRowFeatures(cols);
 }
 
+void ClusterizationMethods::countUnknowClassObjQtty() {
+	int objCount = X.getObjectCount();
+	int i, j;
+	//count how many we have unknown classes
+	for (i = 0; i < objCount; i++)
+		if (X.getObjectAt(i).getClassLabel() == -1)
+			unknownClassObjQtty++;
+
+}
+
 void ClusterizationMethods::initializeData(double dL, double dT)
 {
-    int objCount = X.getObjectCount();
+	int objCount = X.getObjectCount();
     int n = X.getObjectAt(0).getFeatureCount();
-    int i, j;
-    //count how many we have unknown classes
-    for (i = 0; i < objCount; i++ )
-        if (X.getObjectAt(i).getClassLabel() == -1)
-        uknownClassObjQtty++;
+	int i, j;
+    
+	countUnknowClassObjQtty();
 
-    int available = objCount -  uknownClassObjQtty; //set the number of available objects for learning and testing
+    int available = objCount -  unknownClassObjQtty; //set the number of available objects for learning and testing
 
     learnObjQtty = ceil(available * (dL / 100.));
     testObjQtty = ceil(available * (dT / 100.));
@@ -173,16 +181,13 @@ void ClusterizationMethods::initializeData()
 {
     int objCount = X.getObjectCount();
     int n = X.getObjectAt(0).getFeatureCount();
-    int i, j;
     //count how many we have unknown classes
 
 // TODO (Povilas#1#): move to Object matrix
 
-    for (i = 0; i < objCount; i++ )
-        if (X.getObjectAt(i).getClassLabel() == -1)
-        uknownClassObjQtty++;
+	countUnknowClassObjQtty();
 
-    learnObjQtty = objCount - uknownClassObjQtty; //set the number of available objects for learning and testing
+    learnObjQtty = objCount - unknownClassObjQtty; //set the number of available objects for learning and testing
 
     //set dimmensions of the array n+1 = last element points to class
     this->learnSet.setlength(learnObjQtty, n + 1);
@@ -190,12 +195,12 @@ void ClusterizationMethods::initializeData()
     DataObject tmp;
     int tmpL = 0;
 
-    for (i = 0; i < objCount; i++)
+    for (int i = 0; i < objCount; i++)
     {
         tmp = X.getObjectAt(i);
         if ( tmpL < learnObjQtty && tmp.getClassLabel() != -1)
         {
-            for (j = 0; j < n; j++)
+            for (int j = 0; j < n; j++)
                 learnSet(tmpL,j) = tmp.getFeatureAt(j);
             learnSet(tmpL,j) = tmp.getClassLabel();
             tmpL++;

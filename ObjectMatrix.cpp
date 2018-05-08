@@ -72,6 +72,25 @@ void ObjectMatrix::addObject(DataObject object)
     objectCount++;
 }
 
+
+alglib::real_2d_array ObjectMatrix::convertMatrixToArray(int rowsX, int colsX)
+{
+
+	alglib::real_2d_array input;
+	input.setlength(rowsX, colsX);
+
+	for (int i = 0; i < rowsX; i++) // convert X matrix to alglib 2d array of reals
+		{
+		DataObject tmp = getObjectAt(i);
+		for (int j = 0; j < colsX; j++)
+			{
+			input(i, j) = tmp.getFeatureAt(j);
+			}
+		}
+	return input;
+}
+
+
 void ObjectMatrix::addObject(DataObject object, int cls)
 {
     DataObjects.push_back(object);

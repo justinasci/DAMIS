@@ -111,6 +111,8 @@ protected:
     */
     void initializeData();
 
+	void countUnknowClassObjQtty();
+
     /*!
      * Holds size of test object set
      */
@@ -120,9 +122,9 @@ protected:
      */
         int learnObjQtty ;// = 0;
     /*!
-     * Holds quantty of object with uknown class
+     * Holds quantty of object with unknown class
      */
-        int uknownClassObjQtty ;//= 0;
+        int unknownClassObjQtty ;//= 0;
     /*!
      * Alglib data structure for learn set
      */

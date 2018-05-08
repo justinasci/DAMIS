@@ -28,7 +28,7 @@ ObjectMatrix KMEANS::getProjection()
     int rowsX = X.getObjectCount(), colsX = X.getObjectAt(0).getFeatureCount();
     input.setlength(rowsX, colsX);
 
-    convertMatrixToArray(rowsX, input);
+    input = X.convertMatrixToArray(rowsX, colsX);
 
     alglib::clusterizercreate(s);
     alglib::clusterizersetpoints(s, input, 2); //2 means Euclidean distances
@@ -52,19 +52,6 @@ ObjectMatrix KMEANS::getProjection()
 }
 
 
-
-alglib::real_2d_array KMEANS::convertMatrixToArray(int rowsX, alglib::real_2d_array input)
-{
-
-    for ( int i = 0; i < rowsX; i++ ) // convert X matrix to alglib 2d array of reals
-    {
-        DataObject tmp = X.getObjectAt(i);
-        for ( int j = 0; j < colsX; j++ )
-        {
-            input(i,j) = tmp.getFeatureAt(j);
-        }
-    }
-}
 
 double KMEANS::getStress(int rowsX)
 {

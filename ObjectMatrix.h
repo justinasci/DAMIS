@@ -55,6 +55,10 @@ public:
      *  \brief Adds the DataObject to the set of DataObjects.
      *  \param dataObject - the DataObject that needs to be added to the DataObjects list.
      */
+
+	alglib::real_2d_array ObjectMatrix::convertMatrixToArray(int rowsX, int colsX)
+
+
     void addObject(DataObject dataObject);
     /*! \fn void addObject(DataObject object, int cls);
      *  \brief Adds the DataObject to the set of DataObjects.
